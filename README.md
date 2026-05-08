@@ -5,16 +5,24 @@ This tutorial describes how to set up, run, and analyze a binary neutron star (B
 ## Prerequisites
 
 - [`AthenaK`](https://github.com/IAS-Astrophysics/athenak) — the simulation code (the `kadath_bns` problem generator is currently under pull request; use the [`pgen/kadath_bns`](https://github.com/alanlam1002/athenak/tree/pgen/kadath_bns) branch on the author's fork)
-- [`Kadath/FUKA`](https://bitbucket.org/fukaws/fuka) — spectral initial data library (public release `ET_2025_05`)
+- Kadath/FUKA — spectral initial data library; either the [`ET_2025_05` release](https://bitbucket.org/fukaws/fuka) or the [`fuka` branch](https://gitlab.obspm.fr/grandcle/Kadath/-/tree/fuka) of the upstream Kadath repository
 - CMake ≥ 3.16, a C++17-capable compiler, MPI, HDF5, FFTW3
 
 ---
 
-## Patching Kadath (ET\_2025\_05)
+## Patching Kadath
 
 Before compiling Kadath, three source files must be patched to make the
 Kadath memory pools **thread-safe** for use inside `AthenaK`'s OpenMP
 parallel regions.
+
+The same patch applies to all supported Kadath versions:
+
+| Version | Source |
+|---------|--------|
+| `ET_2025_05` branch | [`bitbucket.org/fukaws/fuka`](https://bitbucket.org/fukaws/fuka) |
+| `fukav2` branch | [`bitbucket.org/fukaws/fuka`](https://bitbucket.org/fukaws/fuka) |
+| `fuka` branch | [`gitlab.obspm.fr/grandcle/Kadath`](https://gitlab.obspm.fr/grandcle/Kadath/-/tree/fuka) |
 
 ### Background
 
@@ -40,21 +48,23 @@ without any change to the underlying algorithm.
 ### Applying the patch
 
 A ready-made patch file is provided in [patches/thread_local.patch](patches/thread_local.patch).
-Apply it from the root of the Kadath source tree:
+Apply it from the root of whichever Kadath source tree you are using:
 
 ~~~bash
+# ET_2025_05 or fukav2 branch (FUKA Bitbucket)
 cd /path/to/fuka
+git apply /path/to/athenak-tutorial-kadath/patches/thread_local.patch
+
+# fuka branch (Kadath GitLab)
+cd /path/to/Kadath_fr
 git apply /path/to/athenak-tutorial-kadath/patches/thread_local.patch
 ~~~
 
-If `git apply` reports that some hunks are already applied (e.g. on a
-version newer than `ET_2025_05`), run
+To verify the patch applies cleanly before committing:
 
 ~~~bash
 git apply --check /path/to/athenak-tutorial-kadath/patches/thread_local.patch
 ~~~
-
-to verify the current state before retrying.
 
 ### Manual patch instructions
 
