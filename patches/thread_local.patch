@@ -1,0 +1,90 @@
+From 536916995f8c98329251461ff43331735996c082 Mon Sep 17 00:00:00 2001
+From: Tsz Lok Lam <tlam@sakura01.bc.rzg.mpg.de>
+Date: Fri, 8 May 2026 02:50:03 +0200
+Subject: [PATCH] Make Kadath memory pools thread-local for AthenaK OpenMP compatibility
+
+AthenaK calls FUKA reader routines from within OpenMP parallel regions.
+The static memory pools in Kadath (MemoryMapper and coef_mem) were
+process-global, causing data races when multiple threads entered the
+spectral coefficient and memory-allocation routines simultaneously.
+Marking each pool thread_local gives every OpenMP thread its own
+independent pool, eliminating the races with no change to algorithm logic.
+---
+ include/memory.hpp       | 10 +++++-----
+ src/Coef/coef_1d.cpp     |  4 ++--
+ src/Utilities/memory.cpp |  8 ++++----
+ 3 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/include/memory.hpp b/include/memory.hpp
+index 8f45607..35bf428 100644
+--- a/include/memory.hpp
++++ b/include/memory.hpp
+@@ -54,8 +54,8 @@ namespace Kadath {
+
+ class coef_mem {
+   private:
+-    static std::array<std::unique_ptr<double>,2> mem_ptrs;
+-    static std::array<size_t,2> lengths;
++    static thread_local std::array<std::unique_ptr<double>,2> mem_ptrs;
++    static thread_local std::array<size_t,2> lengths;
+
+   public:
+     static double* get_mem(size_t const num, size_t const len) {
+@@ -81,7 +81,7 @@ class MemoryMapper {
+
+     using mem_map_t = std::vector<ptr_vec_t>;
+     using mem_sizes_t = std::vector<size_t>;
+-    static mem_sizes_t mem_sizes;
++    static thread_local mem_sizes_t mem_sizes;
+
+     #else
+
+@@ -92,8 +92,8 @@ class MemoryMapper {
+     using ptr_t = std::unique_ptr<void,FreeDeleter>;
+     using ptr_list_t = std::vector<ptr_t>;
+
+-    static mem_map_t mem_map;
+-    static ptr_list_t ptr_list;
++    static thread_local mem_map_t mem_map;
++    static thread_local ptr_list_t ptr_list;
+
+   public:
+
+diff --git a/src/Coef/coef_1d.cpp b/src/Coef/coef_1d.cpp
+index 8833da1..71014e6 100644
+--- a/src/Coef/coef_1d.cpp
++++ b/src/Coef/coef_1d.cpp
+@@ -44,8 +44,8 @@ fftw_precomp_t& coef_1d_fftw(int n) {
+ }
+
+
+-std::array<std::unique_ptr<double>,2> coef_mem::mem_ptrs;
+-std::array<size_t,2> coef_mem::lengths {};
++thread_local std::array<std::unique_ptr<double>,2> coef_mem::mem_ptrs;
++thread_local std::array<size_t,2> coef_mem::lengths {};
+
+ void coef_i_1d (int, Array<double>&) ;
+
+diff --git a/src/Utilities/memory.cpp b/src/Utilities/memory.cpp
+index 56dc067..fc13fd0 100644
+--- a/src/Utilities/memory.cpp
++++ b/src/Utilities/memory.cpp
+@@ -21,11 +21,11 @@
+
+ namespace Kadath {
+
+-MemoryMapper::mem_map_t MemoryMapper::mem_map;
+-MemoryMapper::ptr_list_t MemoryMapper::ptr_list;
++thread_local MemoryMapper::mem_map_t MemoryMapper::mem_map;
++thread_local MemoryMapper::ptr_list_t MemoryMapper::ptr_list;
+
+ #ifdef KADATH_VECTORMAP
+-MemoryMapper::mem_sizes_t MemoryMapper::mem_sizes;
++thread_local MemoryMapper::mem_sizes_t MemoryMapper::mem_sizes;
+ #endif
+
+-}
+\ No newline at end of file
++}
+--
+2.50.1
