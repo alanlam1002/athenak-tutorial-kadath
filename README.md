@@ -5,7 +5,7 @@ This tutorial describes how to set up, run, and analyze a binary neutron star (B
 ## Prerequisites
 
 - [`AthenaK`](https://github.com/IAS-Astrophysics/athenak) — the simulation code (the `kadath_bns` problem generator is currently under pull request; use the [`pgen/kadath_bns`](https://github.com/alanlam1002/athenak/tree/pgen/kadath_bns) branch on the author's fork)
-- [`Kadath/FUKA`](https://bitbucket.org/fukaws/fuka) — spectral initial data library; supported versions: tags `v2.1`, `v2.2`, `v2.3`, branches `fukav2`, `fukav2.1`
+- [`Kadath/FUKA`](https://bitbucket.org/fukaws/fuka) — spectral initial data library; supported versions: tags `v2.1`, branches `fukav2`, `fukav2.1`
 - CMake ≥ 3.16, a C++17-capable compiler, MPI, HDF5, FFTW3
 
 ---
@@ -21,15 +21,13 @@ The same patch applies to the following supported Kadath versions:
 | Version | Source |
 |---------|--------|
 | tag `v2.1` | [`bitbucket.org/fukaws/fuka`](https://bitbucket.org/fukaws/fuka) |
-| tag `v2.2` | [`bitbucket.org/fukaws/fuka`](https://bitbucket.org/fukaws/fuka) |
-| tag `v2.3` | [`bitbucket.org/fukaws/fuka`](https://bitbucket.org/fukaws/fuka) |
 | branch `fukav2` | [`bitbucket.org/fukaws/fuka`](https://bitbucket.org/fukaws/fuka) |
 | branch `fukav2.1` | [`bitbucket.org/fukaws/fuka`](https://bitbucket.org/fukaws/fuka) |
 
 ### Background
 
 `AthenaK` interpolates FUKA initial data from within an OpenMP parallel
-loop.  In the public `ET_2025_05` release of Kadath, the static memory
+loop.  In the public release of Kadath, the static memory
 pools in `MemoryMapper` and `coef_mem` are **process-global** (plain
 `static` data members).  When multiple OpenMP threads call into the
 spectral coefficient and memory-allocation routines simultaneously, these
