@@ -1,22 +1,4 @@
-From 536916995f8c98329251461ff43331735996c082 Mon Sep 17 00:00:00 2001
-From: Tsz Lok Lam <tlam@sakura01.bc.rzg.mpg.de>
-Date: Fri, 8 May 2026 02:50:03 +0200
-Subject: [PATCH] Make Kadath memory pools thread-local for AthenaK OpenMP compatibility
-
-AthenaK calls FUKA reader routines from within OpenMP parallel regions.
-The static memory pools in Kadath (MemoryMapper and coef_mem) were
-process-global, causing data races when multiple threads entered the
-spectral coefficient and memory-allocation routines simultaneously.
-Marking each pool thread_local gives every OpenMP thread its own
-independent pool, eliminating the races with no change to algorithm logic.
----
- include/memory.hpp       | 10 +++++-----
- src/Coef/coef_1d.cpp     |  4 ++--
- src/Utilities/memory.cpp |  8 ++++----
- 3 files changed, 11 insertions(+), 11 deletions(-)
-
 diff --git a/include/memory.hpp b/include/memory.hpp
-index 8f45607..35bf428 100644
 --- a/include/memory.hpp
 +++ b/include/memory.hpp
 @@ -54,8 +54,8 @@ namespace Kadath {
@@ -51,7 +33,6 @@ index 8f45607..35bf428 100644
    public:
 
 diff --git a/src/Coef/coef_1d.cpp b/src/Coef/coef_1d.cpp
-index 8833da1..71014e6 100644
 --- a/src/Coef/coef_1d.cpp
 +++ b/src/Coef/coef_1d.cpp
 @@ -44,8 +44,8 @@ fftw_precomp_t& coef_1d_fftw(int n) {
@@ -66,7 +47,6 @@ index 8833da1..71014e6 100644
  void coef_i_1d (int, Array<double>&) ;
 
 diff --git a/src/Utilities/memory.cpp b/src/Utilities/memory.cpp
-index 56dc067..fc13fd0 100644
 --- a/src/Utilities/memory.cpp
 +++ b/src/Utilities/memory.cpp
 @@ -21,11 +21,11 @@
@@ -86,5 +66,3 @@ index 56dc067..fc13fd0 100644
 -}
 \ No newline at end of file
 +}
---
-2.50.1
